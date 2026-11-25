@@ -11,6 +11,17 @@
    - Cada cambio se guarda en GitHub (Commit changes) y en 1-2 minutos
      los jugadores lo ven al recargar la página.
    ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAbRqp7-eA9XvwQ6KMvPKdzmcZZ1dMZj6o",
+  authDomain: "umbr-f6369.firebaseapp.com",
+  projectId: "umbr-f6369",
+  storageBucket: "umbr-f6369.firebasestorage.app",
+  messagingSenderId: "121229147052",
+  appId: "1:121229147052:web:069b2c277e9b7df4461809"
+};
+// (Esta configuración de Firebase es pública por diseño. No es una contraseña:
+//  lo que protege los datos son las reglas de Firestore, ver reglas-firestore.txt)
+
 const UMBRA = {
 
   // ---------- Parte pública (se ve sin iniciar sesión) ----------
@@ -71,6 +82,30 @@ const UMBRA = {
       ]
     }
   },
+
+  // ---------- OTROS ARCHIVOS (público, sin contraseña) ----------
+  // Lore de otros personajes. Para AÑADIR uno: copia un bloque completo { ... },
+  // pégalo debajo del último (con coma entre bloques) y cambia los textos.
+  // Para BORRAR uno: borra su bloque completo.
+  // IMPORTANTE: dentro del lore no uses el símbolo ` (acento grave).
+  otrosArchivos: [
+    {
+      nombre: "NOMBRE DEL PERSONAJE 1",
+      alias: "",
+      autor: "",   // quién escribió el lore (opcional)
+      foto: "", fotoCredito: "", fotoCreditoUrl: "",
+      lore: `Escribe aquí el lore del personaje.
+
+Puedes dejar una línea en blanco para separar párrafos.`
+    },
+    {
+      nombre: "NOMBRE DEL PERSONAJE 2",
+      alias: "",
+      autor: "",
+      foto: "", fotoCredito: "", fotoCreditoUrl: "",
+      lore: `Escribe aquí el lore del personaje.`
+    }
+  ],
 
   // ---------- Los 3 jugadores (cada uno solo ve SU expediente) ----------
   // id y clave: lo que escribe el jugador para entrar.
