@@ -1,5 +1,19 @@
-Guarda aquí tus imágenes (jpg, png o webp).
-Luego, en js/datos.js, escribe la ruta: foto: "img/lider1.jpg"
-Para dar crédito al artista: fotoCredito: "@nombre" (y fotoCreditoUrl: "https://..." si quieres enlace)
-Recomendado: menos de 500 KB cada una para que cargue rápido en el móvil.
-Evita tildes, espacios y mayúsculas en el nombre del archivo.
+CÓMO EDITAR TU JUEGO
+1) En GitHub abre js/datos.js y pulsa el lápiz (Edit).
+2) Cambia nombres, claves y expedientes. Respeta comillas y comas.
+3) Para liberar un archivo de Umbra: liberado:false -> liberado:true
+4) Pulsa "Commit changes". En 1-2 minutos los jugadores lo ven al recargar.
+Cambia las claves "cambia-esta-clave-N" antes de jugar.
+
+OTROS ARCHIVOS (menú público, sin contraseña)
+En js/datos.js, bloque "otrosArchivos". Copia un bloque { ... }, pégalo debajo
+con una coma entre bloques y cambia nombre, alias, autor y lore.
+Si alguien te manda su lore, pégalo dentro de las comillas inversas ` ` del campo lore.
+
+ENVÍO DE LORE POR OTRAS PERSONAS (botón "ESCRIBIR MI LORE" en Otros Archivos)
+Necesita configurar Firebase UNA sola vez:
+1) console.firebase.google.com > proyecto "umbr-f6369" > Firestore Database > Crear base de datos.
+2) Pestaña Reglas: pega el contenido de reglas-firestore.txt y pulsa Publicar.
+3) Cuando alguien envíe un lore, aparece en Firestore > colección otrosArchivos con
+   aprobado: false. Revisa el texto y la URL de la imagen; si está bien, edita ese
+   documento y cambia aprobado a true. Para rechazarlo, bórralo.
