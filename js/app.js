@@ -52,6 +52,7 @@ function menu() {
   vista('[ MENÚ PRINCIPAL ]', 'DIRECTORIO CENTRAL', 'Seleccione el módulo de información corporativa que desea consultar.', '', [
     { t: 'Sobre Nosotros', fn: sobreNosotros },
     { t: 'Quiénes Somos', fn: altoMando },
+    { t: 'Otros Archivos', fn: otrosArchivos },
     { t: 'Archivos Protegidos_', fn: pedirClave }
   ]);
 }
@@ -80,6 +81,95 @@ function altoMando() {
     '<div class="tabla-scroll">' + r.secciones.map(tablaPersonal).join('') + '</div>',
     [{ t: '◀ VOLVER AL MENÚ', fn: menu, suave: true }]);
   $('.caja').classList.add('ancha');
+}
+/* ---------- OTROS ARCHIVOS: lista, lectura y envío de lore ---------- */
+const FB = 'https://www.gstatic.com/firebasejs/10.12.5/';
+let _db = null, enviados = null, listaActual = [], enviando = false;
+
+function cargarScript(src) {
+  return new Promise((ok, mal) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = () => mal(new Error('No cargó ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function conectarDB() {
+  if (_db) return _db;
+  if (!window.firebase) {
+    await cargarScript(FB + 'firebase-app-compat.js');
+    await cargarScript(FB + 'firebase-firestore-compat.js');
+  }
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  _db = firebase.firestore();
+  return _db;
+}
+async function traerEnviados() {
+  if (enviados) return enviados;
+  const db = await conectarDB();
+  const snap = await db.collection('otrosArchivos').where('aprobado', '==', true).get();
+  enviados = snap.docs.map(x => x.data()).sort((p, q) => (p.creado || 0) - (q.creado || 0));
+  return enviados;
+}
+function htmlArchivo(e) {
+  const img = imgHTML({ src: e.foto, credito: e.fotoCredito, url: e.fotoCreditoUrl });
+  return '<div class="tabla-scroll">' + img + '<p class="lore">' + esc(e.lore) + '</p>' +
+    (e.autor ? '<p class="firma">Lore escrito por: ' + esc(e.autor) + '</p>' : '') + '</div>';
+}
+async function otrosArchivos() {
+  const manuales = UMBRA.otrosArchivos || [];
+  let aviso = '';
+  let extra = [];
+  $('.caja').classList.remove('ancha');
+  $('#texto').textContent = 'Consultando archivo comunitario...';
+  try {
+    extra = (await traerEnviados()).map(x => ({ nombre: x.nombre, alias: '', autor: '', foto: x.imagen, fotoCredito: '', fotoCreditoUrl: '', lore: x.lore }));
+  } catch (e) { aviso = '\n(No se pudieron cargar los archivos enviados por otras personas.)'; }
+  listaActual = manuales.concat(extra);
+  const botones = [{ t: '＋ ESCRIBIR MI LORE_', fn: formularioLore }];
+  listaActual.forEach((e, i) => botones.push({ t: e.nombre, fn: () => verArchivo(i) }));
+  botones.push({ t: '◀ VOLVER AL MENÚ', fn: menu, suave: true });
+  vista('[ REGISTRO PÚBLICO ]', 'OTROS ARCHIVOS',
+    (listaActual.length ? 'Archivos de otros personajes. Selecciona uno para leer su historia.' : 'No hay archivos registrados todavía.') + aviso,
+    '', botones);
+}
+function verArchivo(i) {
+  const e = listaActual[i];
+  vista('[ ARCHIVO // PERSONAJE ]', e.nombre, e.alias ? 'Alias: ' + e.alias : '', htmlArchivo(e), [
+    { t: '◀ VOLVER A LA LISTA', fn: otrosArchivos, suave: true },
+    { t: 'MENÚ PRINCIPAL', fn: menu, suave: true }
+  ]);
+  $('.caja').classList.add('ancha');
+}
+function formularioLore() {
+  vista('[ NUEVO ARCHIVO ]', 'ESCRIBE TU LORE', 'Completa los datos de tu personaje. Un administrador revisará el archivo antes de publicarlo.',
+    '<input id="f-nombre" class="campo" maxlength="60" placeholder="NOMBRE DEL PERSONAJE_" autocomplete="off">' +
+    '<input id="f-img" class="campo" maxlength="500" placeholder="URL DE LA IMAGEN (opcional, https://...)_" autocomplete="off">' +
+    '<textarea id="f-lore" class="campo" maxlength="4000" rows="8" placeholder="ESCRIBE AQUÍ EL LORE DE TU PERSONAJE_"></textarea>' +
+    '<div id="error"></div>', [
+      { t: 'ENVIAR ARCHIVO_', fn: enviarLore },
+      { t: '◀ CANCELAR', fn: otrosArchivos, suave: true }
+    ]);
+  $('.caja').classList.add('ancha');
+}
+async function enviarLore() {
+  if (enviando) return;
+  const nombre = $('#f-nombre').value.trim(), img = $('#f-img').value.trim(), lore = $('#f-lore').value.trim();
+  const mal = t => { $('#error').innerHTML = '<div class="error">' + esc(t) + '</div>'; };
+  if (!nombre) return mal('Escribe el nombre del personaje.');
+  if (!lore) return mal('Escribe el lore de tu personaje.');
+  if (img && !/^https:\/\/\S+$/i.test(img)) return mal('La URL de la imagen debe empezar por https://');
+  enviando = true;
+  $('#error').innerHTML = '<div class="nota">Enviando...</div>';
+  try {
+    const db = await conectarDB();
+    await db.collection('otrosArchivos').add({ nombre: nombre, imagen: img, lore: lore, aprobado: false, creado: Date.now() });
+    enviando = false; pitido(1400, .12, 'sine', .05);
+    vista('[ TRANSMISIÓN COMPLETA ]', 'ARCHIVO ENVIADO', 'Tu archivo fue enviado correctamente. Aparecerá en la lista cuando sea aprobado.', '',
+      [{ t: '◀ VOLVER A OTROS ARCHIVOS', fn: otrosArchivos }]);
+  } catch (e) {
+    enviando = false;
+    mal('No se pudo enviar el archivo. Inténtalo de nuevo en unos minutos.');
+  }
 }
 function pedirClave() {
   vista('[ AUTENTICACIÓN REQUERIDA ]', 'SISTEMA ENCRIPTADO', 'El directorio de nivel 4/5 exige identificador de agente y código de desencriptación.',
